@@ -1,7 +1,6 @@
 package com.innoq.chainy
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.innoq.chainy.miner.Miner
 import com.innoq.chainy.miner.Node
 import com.innoq.chainy.model.*
 import io.ktor.application.Application
@@ -19,7 +18,6 @@ import io.ktor.routing.post
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import java.util.*
 
 fun main(args: Array<String>) {
     embeddedServer(Netty, 8080, module = Application::main).start()
@@ -45,14 +43,14 @@ fun Application.main() {
         get("/mine") {
             val (newBlock, metric) = Node.mine()
 
-            val response = MinerResponse(
+            call.respond(MinerResponse(
                     "Mined a new block in " + metric.timeToMine + "s. Hashing power: " + metric.hashRate + " hashes/s.",
-                    newBlock)
-            call.respond(response)
+                    newBlock))
         }
         post("/transactions") {
             val request = call.receive<TransactionRequest>()
 
+            Node.addTransaction(request.payload)
         }
     }
 }

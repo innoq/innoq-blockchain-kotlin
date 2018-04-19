@@ -1,18 +1,18 @@
 package com.innoq.chainy.miner
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.innoq.chainy.model.Block
+import com.innoq.chainy.model.Transaction
 import java.security.MessageDigest
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 object Miner {
-    fun mine(previous: Block): Block {
+    fun mine(previous: Block, transactions: List<Transaction>): Block {
         val seedBlock = Block(
                 previous.index,
                 LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
                 0,
-                emptyList(),
+                transactions,
                 hashBlock(previous)
         )
 

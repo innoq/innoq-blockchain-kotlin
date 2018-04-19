@@ -1,6 +1,7 @@
 package com.innoq.chainy.model
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import java.util.*
 
 /**
  * Model for Block and its transactions
@@ -60,6 +61,6 @@ data class Block(
 }
 
 data class Transaction(
-        val id: String,
+        val id: UUID,
         val timestamp: Long,
         val payload: String)
