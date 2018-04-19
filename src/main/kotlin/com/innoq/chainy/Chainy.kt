@@ -10,6 +10,7 @@ import io.ktor.features.CallLogging
 import io.ktor.features.Compression
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.jackson.jackson
 import io.ktor.request.receive
 import io.ktor.response.respond
@@ -18,6 +19,7 @@ import io.ktor.routing.post
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import java.util.*
 
 fun main(args: Array<String>) {
     embeddedServer(Netty, 8080, module = Application::main).start()
@@ -51,6 +53,20 @@ fun Application.main() {
             val request = call.receive<TransactionRequest>()
 
             Node.addTransaction(request.payload)
+        }
+        get("/transactions/{id}") {
+            try {
+                val transaction = Node.findTransaction(UUID.fromString(call.parameters["id"]))
+                call.respond(
+                        transaction?.let { HttpStatusCode.OK } ?: HttpStatusCode.NotFound,
+                        transaction ?: "Id not found"
+                )
+            } catch (e: IllegalArgumentException) {
+                call.respond(
+                        HttpStatusCode.BadRequest,
+                        "Id is not a valid uuid"
+                )
+            }
         }
     }
 }

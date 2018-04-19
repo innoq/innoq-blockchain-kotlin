@@ -47,4 +47,8 @@ object Node {
     fun addTransaction(payload: String) {
         transactions += Transaction(UUID.randomUUID(), Instant.now().epochSecond, payload)
     }
+
+    fun findTransaction(transactionId: UUID): Transaction? {
+        return chain.findTransaction(transactionId)
+    }
 }
