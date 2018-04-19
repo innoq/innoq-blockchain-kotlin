@@ -1,6 +1,7 @@
 package com.innoq.chainy
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.innoq.chainy.model.Block
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
@@ -17,6 +18,7 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import com.innoq.chainy.model.Status
+import com.innoq.chainy.model.Transaction
 import java.util.*
 
 fun main(args: Array<String>) {
@@ -25,6 +27,9 @@ fun main(args: Array<String>) {
 
 fun Application.main() {
     val nodeId = UUID.randomUUID()
+
+    val genesisBlock = Block(1, 0, 955977,
+            listOf(Transaction("b3c973e2-db05-4eb5-9668-3e81c7389a6d", 0, "I am Heribert Innoq")), "0")
 
     install(DefaultHeaders)
     install(Compression)
@@ -41,7 +46,7 @@ fun Application.main() {
                 call.respond(Status(nodeId, 0))
             }
             get("/blocks") {
-                call.respondText("", ContentType.Application.Json)
+                call.respond(genesisBlock)
             }
             get("/mine") {
                 call.respondText("", ContentType.Application.Json)
