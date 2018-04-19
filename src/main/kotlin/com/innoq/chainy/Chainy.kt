@@ -10,17 +10,22 @@ import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
 import io.ktor.http.ContentType
 import io.ktor.jackson.jackson
+import io.ktor.response.respond
 import io.ktor.response.respondText
 import io.ktor.routing.get
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import model.Status
+import java.util.*
 
 fun main(args: Array<String>) {
     embeddedServer(Netty, 8080, module = Application::main).start()
 }
 
 fun Application.main() {
+    val nodeId = UUID.randomUUID()
+
     install(DefaultHeaders)
     install(Compression)
     install(CallLogging)
@@ -30,10 +35,10 @@ fun Application.main() {
         }
     }
 
-    embeddedServer(Netty, 8080) {
+    routing {
         routing {
             get("/") {
-                call.respondText("My example", ContentType.Application.Json)
+                call.respond(Status(nodeId, 0))
             }
             get("/blocks") {
                 call.respondText("", ContentType.Application.Json)
@@ -42,5 +47,5 @@ fun Application.main() {
                 call.respondText("", ContentType.Application.Json)
             }
         }
-    }.start(wait = true)
+    }
 }
