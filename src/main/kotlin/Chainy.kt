@@ -11,11 +11,11 @@ fun main(args: Array<String>) {
         routing {
             get("/") {
                 call.respondText("My example", ContentType.Application.Json)
-            },
-            get("") {
+            }
+            get("/blocks") {
                 call.respondText("", ContentType.Application.Json)
-            },
-            get("") {
+            }
+            get("/mine") {
                 call.respondText("", ContentType.Application.Json)
             }
         }
