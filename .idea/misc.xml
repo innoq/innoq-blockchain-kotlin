@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ExternalStorageConfigurationManager" enabled="true" />
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/out" />
+  </component>
+  <component name="SbtLocalSettings">
+    <option name="modificationStamps">
+      <map>
+        <entry key="$USER_HOME$/Downloads/scalatrain" value="1456349696000" />
+        <entry key="$PROJECT_DIR$/../advanced-akka-scala" value="1456348317000" />
+        <entry key="$PROJECT_DIR$/../akka-http-websockets" value="1457708172000" />
+        <entry key="$PROJECT_DIR$/../fast-track-akka-scala" value="1456345056000" />
+        <entry key="$PROJECT_DIR$/../scala-react-leaflet/UpdatingMap" value="1459854402000" />
+        <entry key="$PROJECT_DIR$/../scalatra-component-skeleton" value="1460962852000" />
+        <entry key="$PROJECT_DIR$/../scalatrain-advanced" value="1456345310000" />
+        <entry key="$PROJECT_DIR$/../schulungen/fast-track-akka-scala" value="1456348656000" />
+        <entry key="$PROJECT_DIR$/../zuerich200-accounts" value="1468832097000" />
+        <entry key="$PROJECT_DIR$/../zuerich200-demo-adapter" value="1461567738000" />
+        <entry key="$PROJECT_DIR$/../zuerich200-fleet" value="1462342692000" />
+        <entry key="$PROJECT_DIR$/../zuerich200-geo" value="1462345648000" />
+        <entry key="$PROJECT_DIR$/../zuerich200-kraken" value="1466773908000" />
+        <entry key="$PROJECT_DIR$/../zuerich200-mongo-event-bridge" value="1462257187000" />
+        <entry key="$PROJECT_DIR$/../zuerich200-mongodb-sink" value="1486564186000" />
+        <entry key="$PROJECT_DIR$/../zuerich200-notification" value="1466694431000" />
+        <entry key="$PROJECT_DIR$/../zuerich200-payone-adapter" value="1468588105000" />
+        <entry key="$PROJECT_DIR$/../zuerich200-public-api" value="1465484756000" />
+        <entry key="$PROJECT_DIR$/../zuerich200-reservation" value="1464347013000" />
+        <entry key="$PROJECT_DIR$/../zuerich200-stromer-adapter" value="1460719501000" />
+        <entry key="$PROJECT_DIR$/../zuerich200-task" value="1470652216000" />
+        <entry key="$PROJECT_DIR$/../zuerich200-users" value="1468222967000" />
+      </map>
+    </option>
+    <option name="externalProjectsViewState">
+      <projects_view />
+    </option>
+  </component>
+</project>
