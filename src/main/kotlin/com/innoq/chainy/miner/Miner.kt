@@ -7,18 +7,17 @@ import java.time.ZoneOffset
 
 object Miner {
     fun mine(previous: Block): Block {
-        val previousBlockHash = hashBlock(previous)
-
-        val newBlock = Block(
+        val seedBlock = Block(
                 previous.index,
                 LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
                 0,
                 emptyList(),
-                previousBlockHash
+                hashBlock(previous)
         )
 
-        generateSequence(newBlock) { it.copy(proof = it.proof + 1) }
-                .find { hashBlock(it).startsWith("0000") }
+        return generateSequence(seedBlock) { it.copy(proof = it.proof + 1) }
+                .dropWhile { !hashBlock(it).startsWith("0000") }
+                .first()
     }
 
     fun hashBlock(block: Block): String {
