@@ -25,7 +25,17 @@ data class Block(
         val timestamp: Long,
         val proof: Int,
         val transactions: List<Transaction>,
-        val previousBlockHash: String)
+        val previousBlockHash: String) {
+    fun toStringHash(): String {
+        return index.toString() +
+                timestamp.toString() +
+                proof.toString() +
+                transactions.fold("") { s, t ->
+                    s + t.id + t.payload + t.timestamp)
+                } +
+                previousBlockHash
+    }
+}
 
 data class Transaction(
         val id: String,
