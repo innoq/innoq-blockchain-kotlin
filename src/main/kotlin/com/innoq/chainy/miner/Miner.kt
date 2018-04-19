@@ -1,5 +1,6 @@
 package com.innoq.chainy.miner
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.innoq.chainy.model.Block
 import java.security.MessageDigest
 import java.time.LocalDateTime
@@ -21,7 +22,7 @@ object Miner {
     }
 
     fun hashBlock(block: Block): String {
-        return hashStringWithSha256(block.toStringHash())
+        return hashStringWithSha256(block.serialize())
     }
 
     private fun hashStringWithSha256(input: String): String {

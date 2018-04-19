@@ -25,7 +25,7 @@ fun main(args: Array<String>) {
 fun Application.main() {
     val nodeId = UUID.randomUUID()
 
-    val genesisBlock = Block(1, 0, 955977,
+    val genesisBlock = Block(1, 0, 1917336,
             listOf(Transaction("b3c973e2-db05-4eb5-9668-3e81c7389a6d", 0, "I am Heribert Innoq")), "0")
     var chain = Chain(listOf(genesisBlock), 1)
 
@@ -47,9 +47,16 @@ fun Application.main() {
                 call.respond(chain)
             }
             get("/mine") {
+                val start = System.nanoTime()
                 val newBlock = Miner.mine(chain.blocks.last())
+                val end = System.nanoTime()
                 chain = chain.addBlock(newBlock)
-                val response = MinerResponse("Mined a new block in 11.214s. Hashing power: 58854 hashes/s.", newBlock)
+                val time = (end - start) / (1000.0 * 1000 * 1000)
+                val hashPower = newBlock.proof / time
+
+                val response = MinerResponse(
+                        "Mined a new block in " + time + "s. Hashing power: " +  hashPower + " hashes/s.",
+                        newBlock)
                 call.respond(response)
             }
         }

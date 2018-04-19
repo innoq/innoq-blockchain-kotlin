@@ -26,14 +26,36 @@ data class Block(
         val proof: Int,
         val transactions: List<Transaction>,
         val previousBlockHash: String) {
-    fun toStringHash(): String {
-        return index.toString() +
-                timestamp.toString() +
-                proof.toString() +
-                transactions.fold("") { s, t ->
-                    s + t.id + t.payload + t.timestamp
-                } +
-                previousBlockHash
+
+    /**
+     * Manual serialization is about 10 times faster than generic jackson serialization
+     */
+    fun serialize(): String {
+        val output = StringBuffer("{")
+                .append("\"index\":")
+                .append(index)
+                .append(",\"timestamp\":")
+                .append(timestamp)
+                .append(",\"proof\":")
+                .append(proof)
+                .append(",\"transactions\":[")
+
+        transactions.forEach { transaction ->
+            output.append("{")
+                    .append("\"id\":\"")
+                    .append(transaction.id)
+                    .append("\",\"timestamp\":")
+                    .append(transaction.timestamp)
+                    .append(",\"payload\":\"")
+                    .append(transaction.payload)
+                    .append("\"}")
+        }
+
+        output.append("],\"previousBlockHash\":\"")
+                .append(previousBlockHash)
+                .append("\"}")
+
+        return output.toString()
     }
 }
 
