@@ -68,5 +68,6 @@ fun Application.main() {
                 )
             }
         }
+        post("/nodes/register")
     }
 }

@@ -31,7 +31,7 @@ object Node {
         val start = System.nanoTime()
 
         val transactionsToAdd = transactions.take(5)
-        transactions = transactions.drop(5)
+        transactions = transactions.filter { !transactionsToAdd.contains(it) }
 
         val newBlock = Miner.mine(chain.blocks.last(), transactionsToAdd)
         val end = System.nanoTime()
