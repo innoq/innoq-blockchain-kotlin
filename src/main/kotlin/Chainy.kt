@@ -19,5 +19,5 @@ fun main(args: Array<String>) {
                 call.respondText("", ContentType.Application.Json)
             }
         }
-    }                                                                    
+    }.start(wait = true)
 }
