@@ -16,7 +16,7 @@ import io.ktor.routing.get
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import model.Status
+import com.innoq.chainy.model.Status
 import java.util.*
 
 fun main(args: Array<String>) {
