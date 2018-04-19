@@ -25,11 +25,7 @@ data class Block(
         val timestamp: Long,
         val proof: Int,
         val transactions: List<Transaction>,
-        val previousBlockHash: String,
-        @JsonIgnore
-        val next: Block? = null,
-        @JsonIgnore
-        val previous: Block? = null)
+        val previousBlockHash: String)
 
 data class Transaction(
         val id: String,

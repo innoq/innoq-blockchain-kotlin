@@ -2,6 +2,7 @@ package com.innoq.chainy
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.innoq.chainy.model.Block
+import com.innoq.chainy.model.Chain
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
@@ -30,6 +31,7 @@ fun Application.main() {
 
     val genesisBlock = Block(1, 0, 955977,
             listOf(Transaction("b3c973e2-db05-4eb5-9668-3e81c7389a6d", 0, "I am Heribert Innoq")), "0")
+    val chain = Chain(listOf(genesisBlock), 1)
 
     install(DefaultHeaders)
     install(Compression)
@@ -46,7 +48,7 @@ fun Application.main() {
                 call.respond(Status(nodeId, 0))
             }
             get("/blocks") {
-                call.respond(genesisBlock)
+                call.respond(chain)
             }
             get("/mine") {
                 call.respondText("", ContentType.Application.Json)
