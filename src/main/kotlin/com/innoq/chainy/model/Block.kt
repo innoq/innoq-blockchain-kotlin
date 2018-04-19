@@ -1,4 +1,4 @@
-package model
+package com.innoq.chainy.model
 
 import java.time.LocalDateTime
 
