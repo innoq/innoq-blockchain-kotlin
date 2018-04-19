@@ -1,5 +1,7 @@
 package com.innoq.chainy.model
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+
 /**
  * Model for Block and its transactions
  *
@@ -23,7 +25,11 @@ data class Block(
         val timestamp: Long,
         val proof: Int,
         val transactions: List<Transaction>,
-        val previousBlockHash: String)
+        val previousBlockHash: String,
+        @JsonIgnore
+        val next: Block? = null,
+        @JsonIgnore
+        val previous: Block? = null)
 
 data class Transaction(
         val id: String,
