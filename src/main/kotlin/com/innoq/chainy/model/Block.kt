@@ -31,7 +31,7 @@ data class Block(
                 timestamp.toString() +
                 proof.toString() +
                 transactions.fold("") { s, t ->
-                    s + t.id + t.payload + t.timestamp)
+                    s + t.id + t.payload + t.timestamp
                 } +
                 previousBlockHash
     }

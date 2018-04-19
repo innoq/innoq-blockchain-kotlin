@@ -1,6 +1,7 @@
 package com.innoq.chainy
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.innoq.chainy.miner.Miner
 import com.innoq.chainy.model.*
 import io.ktor.application.Application
 import io.ktor.application.call
@@ -26,7 +27,7 @@ fun Application.main() {
 
     val genesisBlock = Block(1, 0, 955977,
             listOf(Transaction("b3c973e2-db05-4eb5-9668-3e81c7389a6d", 0, "I am Heribert Innoq")), "0")
-    val chain = Chain(listOf(genesisBlock), 1)
+    var chain = Chain(listOf(genesisBlock), 1)
 
     install(DefaultHeaders)
     install(Compression)
@@ -40,13 +41,15 @@ fun Application.main() {
     routing {
         routing {
             get("/") {
-                call.respond(Status(nodeId, 0))
+                call.respond(Status(nodeId, chain.blockHeight))
             }
             get("/blocks") {
                 call.respond(chain)
             }
             get("/mine") {
-                val response = MinerResponse("Mined a new block in 11.214s. Hashing power: 58854 hashes/s.", genesisBlock)
+                val newBlock = Miner.mine(chain.blocks.last())
+                chain = chain.addBlock(newBlock)
+                val response = MinerResponse("Mined a new block in 11.214s. Hashing power: 58854 hashes/s.", newBlock)
                 call.respond(response)
             }
         }
