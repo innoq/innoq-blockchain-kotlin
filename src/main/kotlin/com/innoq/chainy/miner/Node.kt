@@ -3,6 +3,10 @@ package com.innoq.chainy.miner
 import com.innoq.chainy.model.*
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.TimeUnit
+import okhttp3.OkHttpClient
+import okhttp3.Request
+
 
 object Node {
     val nodeId = UUID.randomUUID()
@@ -64,6 +68,16 @@ object Node {
     fun registerNode(host: String): RemoteNode {
         val remoteNode = RemoteNode(UUID.randomUUID(), host)
         remoteNodes += remoteNodes + remoteNode
+
+        val client = OkHttpClient.Builder()
+                .readTimeout(0, TimeUnit.MILLISECONDS)
+                .build()
+
+        val request = Request.Builder()
+                .url("$host/events")
+                .build()
+        client.newWebSocket(request, EventListener())
+
         sendEvent(NewNodeEvent(remoteNode))
 
         return remoteNode
