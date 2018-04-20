@@ -1,5 +1,7 @@
 package com.innoq.chainy.model
 
+import com.innoq.chainy.miner.Miner
+import com.innoq.chainy.miner.Node
 import java.util.*
 
 /**
@@ -17,5 +19,9 @@ data class Chain(
         return blocks
                 .flatMap { it.transactions }
                 .find { it.id == transactionId }
+    }
+
+    fun lastBlockIsPrevious(block: Block): Boolean {
+        return Miner.hashBlock(blocks.last()) == block.previousBlockHash
     }
 }

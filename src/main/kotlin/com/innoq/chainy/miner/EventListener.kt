@@ -21,7 +21,7 @@ class EventListener : WebSocketListener() {
         when (event) {
             is NewTransactionEvent -> {
                 println("received new transaction")
-                Node.addTransaction(event.transaction.payload)
+                Node.addExistingTransaction(event.transaction)
             }
             is NewBlockEvent -> {
                 println("received new block")
@@ -34,15 +34,12 @@ class EventListener : WebSocketListener() {
     }
 
     override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-        println("Got message")
     }
 
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-
     }
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-
     }
 
     override fun onFailure(webSocket: WebSocket?, t: Throwable?, response: Response?) {

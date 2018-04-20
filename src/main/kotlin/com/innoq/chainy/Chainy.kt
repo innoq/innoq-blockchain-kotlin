@@ -87,7 +87,11 @@ fun Application.main() {
         post("/nodes/register") {
             val request = call.receive<NodeRegisterRequest>()
             val node = Node.registerNode(request.host)
-            call.respond(NodeRegisterResponse("New node added", node))
+
+            call.respond(
+                    node?.let { HttpStatusCode.OK } ?: HttpStatusCode.Conflict,
+                    node?.let { NodeRegisterResponse("New node added", it) } ?: ""
+            )
         }
         webSocket("/events") {
             val listenerId = UUID.randomUUID()

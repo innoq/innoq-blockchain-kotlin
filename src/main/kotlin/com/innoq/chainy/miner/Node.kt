@@ -1,5 +1,6 @@
 package com.innoq.chainy.miner
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.innoq.chainy.model.*
 import java.time.Instant
 import java.util.*
@@ -10,7 +11,12 @@ import okhttp3.Request
 
 object Node {
     val nodeId = UUID.randomUUID()
+
     val difficulty = 4
+
+    val client = OkHttpClient.Builder()
+            .readTimeout(0, TimeUnit.MILLISECONDS)
+            .build()
 
     private val genesisBlock = Block(1,
             0,
@@ -66,22 +72,53 @@ object Node {
         return chain.findTransaction(transactionId)
     }
 
-    fun registerNode(host: String): RemoteNode {
-        val remoteNode = RemoteNode(UUID.randomUUID(), host)
-        remoteNodes += remoteNodes + remoteNode
+    fun registerNode(host: String): RemoteNode? {
+        val response = client
+                .newCall(Request.Builder()
+                        .url(host)
+                        .addHeader("Accept", "*/*")
+                        .get()
+                        .build())
+                .execute()
 
-        val client = OkHttpClient.Builder()
-                .readTimeout(0, TimeUnit.MILLISECONDS)
+        if (response.isSuccessful) {
+            val status = jacksonObjectMapper().readValue(response.body()!!.string(), Status::class.java)
+            val remoteNode = RemoteNode(status.nodeId, host)
+
+            //already listening
+            if (remoteNodes.contains(remoteNode)) {
+                return null
+            }
+
+            if (status.currentBlockHeight > chain.blockHeight) {
+                purgeChain(remoteNode)
+            }
+
+            remoteNodes += remoteNodes + remoteNode
+
+            val request = Request.Builder()
+                    .url("$host/events")
+                    .build()
+            client.newWebSocket(request, EventListener())
+
+            sendEvent(NewNodeEvent(remoteNode))
+            return remoteNode
+        }
+
+        return null
+    }
+
+    private fun purgeChain(node: RemoteNode) {
+        val response = client.newCall(Request.Builder()
+                .url("${node.host}/blocks")
+                .addHeader("Accept", "*/*")
+                .get()
                 .build()
+        ).execute()
 
-        val request = Request.Builder()
-                .url("$host/events")
-                .build()
-        client.newWebSocket(request, EventListener())
-
-        sendEvent(NewNodeEvent(remoteNode))
-
-        return remoteNode
+        if (response.isSuccessful) {
+            chain = jacksonObjectMapper().readValue(response.body()!!.string(), Chain::class.java)
+        }
     }
 
     private fun sendEvent(event: Event) {
@@ -99,9 +136,16 @@ object Node {
     fun addBlockIfValid(block: Block) {
         val hash = Miner.hashBlock(block)
 
-        if(hash.take(difficulty).all { it == '0' } &&
-                Miner.hashBlock(chain.blocks.last()) == block.previousBlockHash) {
+        if (Miner.hashPassesDifficulty(hash, difficulty) && chain.lastBlockIsPrevious(block)) {
+            println("Verified block and appended it")
             chain = chain.addBlock(block)
+            transactions -= block.transactions
+        } else {
+            println("Block was invalid!")
         }
+    }
+
+    fun addExistingTransaction(transaction: Transaction) {
+        transactions += transaction
     }
 }
