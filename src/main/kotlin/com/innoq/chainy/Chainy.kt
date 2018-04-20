@@ -23,6 +23,7 @@ import io.ktor.server.netty.Netty
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
+import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.channels.consumeEach
 import kotlinx.coroutines.experimental.channels.sendBlocking
 import java.util.*
@@ -55,11 +56,16 @@ fun Application.main() {
             call.respond(ChainResponse(chain.blocks, chain.blockHeight))
         }
         post("/mine") {
-            val (newBlock, metric) = Node.mine()
+            val result = Node.mine()
 
-            call.respond(MinerResponse(
-                    "Mined a new block in " + metric.timeToMine + "s. Hashing power: " + metric.hashRate + " hashes/s.",
-                    newBlock))
+            if (result != null) {
+                val (newBlock, metric) = result
+                call.respond(MinerResponse(
+                        "Mined a new block in " + metric.timeToMine + "s. Hashing power: " + metric.hashRate + " hashes/s.",
+                        newBlock))
+            } else {
+                call.respond(HttpStatusCode.NotFound, "Could not mine a valid block, retry")
+            }
         }
         post("/transactions") {
             val request = call.receive<TransactionRequest>()

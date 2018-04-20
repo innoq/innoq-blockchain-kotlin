@@ -2,17 +2,21 @@ package com.innoq.chainy.miner
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.innoq.chainy.model.*
+import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.TimeUnit
-
+import kotlin.math.min
 
 object Node {
     val nodeId = UUID.randomUUID()
 
-    val difficulty = 4
+    val difficulty = System.getProperty("difficulty", "5").toInt()
+
+    val port = System.getProperty("port", "8080")
 
     val client = OkHttpClient.Builder()
             .readTimeout(0, TimeUnit.MILLISECONDS)
@@ -34,7 +38,7 @@ object Node {
         return chain
     }
 
-    fun mine(): Pair<Block, MiningMetrics> {
+    fun mine(): Pair<Block, MiningMetrics>? {
         val start = System.nanoTime()
 
         val transactionsToAdd = transactions.take(5)
@@ -43,13 +47,17 @@ object Node {
         val newBlock = Miner.mine(chain.blocks.last(), transactionsToAdd, difficulty)
         val end = System.nanoTime()
 
-        chain = chain.addBlock(newBlock)
-        sendEvent(NewBlockEvent(newBlock))
+        val newChain = chain.addBlock(newBlock)
+        if (newChain != null) {
+            chain = newChain
+            sendEvent(NewBlockEvent(newBlock))
 
-        val time = (end - start) / (1000.0 * 1000 * 1000)
-        val hashPower = newBlock.proof / time
+            val time = (end - start) / (1000.0 * 1000 * 1000)
+            val hashPower = newBlock.proof / time
 
-        return Pair(newBlock, MiningMetrics(time, hashPower))
+            return Pair(newBlock, MiningMetrics(time, hashPower))
+        }
+        return null
     }
 
     fun addTransaction(payload: String) {
@@ -82,11 +90,13 @@ object Node {
                 return null
             }
 
+            remoteNodes += remoteNodes + remoteNode
+
+            registerOnRemote(remoteNode)
+
             if (status.currentBlockHeight > chain.blockHeight) {
                 purgeChain(remoteNode)
             }
-
-            remoteNodes += remoteNodes + remoteNode
 
             val request = Request.Builder()
                     .url("$host/events")
@@ -94,10 +104,25 @@ object Node {
             client.newWebSocket(request, NodeEventsListener(remoteNode))
 
             sendEvent(NewNodeEvent(remoteNode))
+            println("Registered new node $remoteNode")
+
             return remoteNode
         }
 
         return null
+    }
+
+    private fun registerOnRemote(remoteNode: RemoteNode) {
+        client
+                .newCall(Request.Builder()
+                        .url("${remoteNode.host}/nodes/register")
+                        .addHeader("Accept", "*/*")
+                        .post(RequestBody.create(
+                                MediaType.parse("application/json"),
+                                "{\"host\": \"http://localhost:$port\"}")
+                        )
+                        .build())
+                .execute()
     }
 
     private fun purgeChain(node: RemoteNode) {
@@ -126,14 +151,20 @@ object Node {
     }
 
     fun addBlockIfValid(block: Block, remoteNode: RemoteNode) {
+        if (chain.blocks.contains(block)) {
+            return
+        }
+
         val pass = Miner.hashPassesDifficulty(Miner.hashBlock(block), difficulty)
         if (!pass) {
             println("Block was invalid and dropped!")
         } else {
+            val newChain = chain.addBlock(block)
             when {
-                chain.lastBlockIsPrevious(block) -> {
-                    chain = chain.addBlock(block)
+                newChain != null -> {
+                    chain = newChain
                     transactions -= block.transactions
+                    sendEvent(NewBlockEvent(block))
                 }
                 block.index > chain.blockHeight -> purgeChain(remoteNode)
                 else -> println("Got a valid block which is on a shorter chain than ours. Dropping block")

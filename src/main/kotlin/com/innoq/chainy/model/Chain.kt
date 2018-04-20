@@ -1,6 +1,7 @@
 package com.innoq.chainy.model
 
 import com.innoq.chainy.miner.Miner
+import com.innoq.chainy.miner.Node
 import java.util.*
 
 /**
@@ -11,7 +12,10 @@ data class Chain(val blocks: List<Block>) {
 
     val blockHeight: Int = blocks.size
 
-    fun addBlock(newBlock: Block): Chain {
+    fun addBlock(newBlock: Block): Chain? {
+        if(!lastBlockIsPrevious(newBlock)) {
+            return null
+        }
         return Chain(blocks + newBlock)
     }
 
