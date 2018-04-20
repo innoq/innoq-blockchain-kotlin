@@ -3,10 +3,7 @@ package com.innoq.chainy
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.innoq.chainy.miner.Node
-import com.innoq.chainy.model.MinerResponse
-import com.innoq.chainy.model.NodeRegisterRequest
-import com.innoq.chainy.model.NodeRegisterResponse
-import com.innoq.chainy.model.TransactionRequest
+import com.innoq.chainy.model.*
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
@@ -54,7 +51,8 @@ fun Application.main() {
             call.respond(Node.getStatus())
         }
         get("/blocks") {
-            call.respond(Node.getChain())
+            val chain = Node.getChain()
+            call.respond(ChainResponse(chain.blocks, chain.blockHeight))
         }
         post("/mine") {
             val (newBlock, metric) = Node.mine()

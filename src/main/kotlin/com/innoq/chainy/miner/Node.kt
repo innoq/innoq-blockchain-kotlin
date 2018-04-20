@@ -2,11 +2,11 @@ package com.innoq.chainy.miner
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.innoq.chainy.model.*
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.TimeUnit
-import okhttp3.OkHttpClient
-import okhttp3.Request
 
 
 object Node {
@@ -18,15 +18,7 @@ object Node {
             .readTimeout(0, TimeUnit.MILLISECONDS)
             .build()
 
-    private val genesisBlock = Block(1,
-            0,
-            1917336,
-            listOf(Transaction(UUID.fromString("b3c973e2-db05-4eb5-9668-3e81c7389a6d"),
-                    0,
-                    "I am Heribert Innoq")),
-            "0")
-
-    private var chain = Chain(listOf(genesisBlock), 1)
+    private var chain = Chain.initial()
 
     private var transactions = emptyList<Transaction>()
 
@@ -99,7 +91,7 @@ object Node {
             val request = Request.Builder()
                     .url("$host/events")
                     .build()
-            client.newWebSocket(request, EventListener())
+            client.newWebSocket(request, NodeEventsListener(remoteNode))
 
             sendEvent(NewNodeEvent(remoteNode))
             return remoteNode
@@ -133,15 +125,19 @@ object Node {
         listeners -= listenerId
     }
 
-    fun addBlockIfValid(block: Block) {
-        val hash = Miner.hashBlock(block)
-
-        if (Miner.hashPassesDifficulty(hash, difficulty) && chain.lastBlockIsPrevious(block)) {
-            println("Verified block and appended it")
-            chain = chain.addBlock(block)
-            transactions -= block.transactions
+    fun addBlockIfValid(block: Block, remoteNode: RemoteNode) {
+        val pass = Miner.hashPassesDifficulty(Miner.hashBlock(block), difficulty)
+        if (!pass) {
+            println("Block was invalid and dropped!")
         } else {
-            println("Block was invalid!")
+            when {
+                chain.lastBlockIsPrevious(block) -> {
+                    chain = chain.addBlock(block)
+                    transactions -= block.transactions
+                }
+                block.index > chain.blockHeight -> purgeChain(remoteNode)
+                else -> println("Got a valid block which is on a shorter chain than ours. Dropping block")
+            }
         }
     }
 
