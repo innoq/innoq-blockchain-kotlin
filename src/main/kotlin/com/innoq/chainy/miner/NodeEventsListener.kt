@@ -29,16 +29,4 @@ class NodeEventsListener(private val remoteNode: RemoteNode) : WebSocketListener
             }
         }
     }
-
-    override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-    }
-
-    override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-    }
-
-    override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-    }
-
-    override fun onFailure(webSocket: WebSocket?, t: Throwable?, response: Response?) {
-    }
 }

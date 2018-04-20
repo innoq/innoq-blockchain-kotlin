@@ -9,18 +9,13 @@ import okhttp3.RequestBody
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.math.min
 
 object Node {
-    val nodeId = UUID.randomUUID()
+    private val nodeId = UUID.randomUUID()!!
 
-    val difficulty = System.getProperty("difficulty", "5").toInt()
-
-    val port = System.getProperty("port", "8080")
-
-    val client = OkHttpClient.Builder()
+    private val client = OkHttpClient.Builder()
             .readTimeout(0, TimeUnit.MILLISECONDS)
-            .build()
+            .build()!!
 
     private var chain = Chain.initial()
 
@@ -39,12 +34,12 @@ object Node {
     }
 
     fun mine(): Pair<Block, MiningMetrics>? {
-        val start = System.nanoTime()
 
         val transactionsToAdd = transactions.take(5)
         transactions = transactions.filter { !transactionsToAdd.contains(it) }
 
-        val newBlock = Miner.mine(chain.blocks.last(), transactionsToAdd, difficulty)
+        val start = System.nanoTime()
+        val newBlock = Miner.mine(chain.blocks.last(), transactionsToAdd, Settings.difficulty)
         val end = System.nanoTime()
 
         val newChain = chain.addBlock(newBlock)
@@ -89,27 +84,28 @@ object Node {
             if (remoteNodes.contains(remoteNode)) {
                 return null
             }
-
-            remoteNodes += remoteNodes + remoteNode
-
+            registerRemote(remoteNode, status, host)
             registerOnRemote(remoteNode)
-
-            if (status.currentBlockHeight > chain.blockHeight) {
-                purgeChain(remoteNode)
-            }
-
-            val request = Request.Builder()
-                    .url("$host/events")
-                    .build()
-            client.newWebSocket(request, NodeEventsListener(remoteNode))
-
-            sendEvent(NewNodeEvent(remoteNode))
             println("Registered new node $remoteNode")
 
             return remoteNode
         }
 
         return null
+    }
+
+    private fun registerRemote(remoteNode: RemoteNode, status: Status, host: String) {
+        remoteNodes += remoteNodes + remoteNode
+
+        if (status.currentBlockHeight > chain.blockHeight) {
+            purgeChain(remoteNode)
+        }
+
+        val request = Request.Builder()
+                .url("$host/events")
+                .build()
+        client.newWebSocket(request, NodeEventsListener(remoteNode))
+        sendEvent(NewNodeEvent(remoteNode))
     }
 
     private fun registerOnRemote(remoteNode: RemoteNode) {
@@ -119,7 +115,7 @@ object Node {
                         .addHeader("Accept", "*/*")
                         .post(RequestBody.create(
                                 MediaType.parse("application/json"),
-                                "{\"host\": \"http://localhost:$port\"}")
+                                "{\"host\": \"http://localhost:${Settings.port}\"}")
                         )
                         .build())
                 .execute()
@@ -155,7 +151,7 @@ object Node {
             return
         }
 
-        val pass = Miner.hashPassesDifficulty(Miner.hashBlock(block), difficulty)
+        val pass = Miner.hashPassesDifficulty(Miner.hashBlock(block), Settings.difficulty)
         if (!pass) {
             println("Block was invalid and dropped!")
         } else {
