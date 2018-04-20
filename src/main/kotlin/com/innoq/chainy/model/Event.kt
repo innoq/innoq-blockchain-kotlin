@@ -2,10 +2,7 @@ package com.innoq.chainy.model
 
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.JsonDeserializer
-import com.fasterxml.jackson.databind.JsonSerializer
-import com.fasterxml.jackson.databind.SerializerProvider
+import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 
@@ -50,7 +47,18 @@ object EventSerializer : JsonSerializer<Event>() {
 
 object EventDeserializer : JsonDeserializer<Event>() {
     override fun deserialize(p: JsonParser?, ctxt: DeserializationContext?): Event {
-        
+        val event = p!!.codec.readTree<JsonNode>(p)
+
+        when (event.get("type").asText()) {
+            "new_block" ->
+                return NewBlockEvent(p.codec.treeToValue(event.get("data"), Block::class.java))
+            "new_transaction" ->
+                return NewTransactionEvent(p.codec.treeToValue(event.get("data"), Transaction::class.java))
+            "new_node" ->
+                return NewNodeEvent(p.codec.treeToValue(event.get("data"), RemoteNode::class.java))
+            else ->
+                throw IllegalArgumentException("type could not be read")
+        }
     }
 
 }

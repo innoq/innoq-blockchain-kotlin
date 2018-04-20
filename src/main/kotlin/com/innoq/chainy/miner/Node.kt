@@ -10,6 +10,7 @@ import okhttp3.Request
 
 object Node {
     val nodeId = UUID.randomUUID()
+    val difficulty = 4
 
     private val genesisBlock = Block(1,
             0,
@@ -41,7 +42,7 @@ object Node {
         val transactionsToAdd = transactions.take(5)
         transactions = transactions.filter { !transactionsToAdd.contains(it) }
 
-        val newBlock = Miner.mine(chain.blocks.last(), transactionsToAdd)
+        val newBlock = Miner.mine(chain.blocks.last(), transactionsToAdd, difficulty)
         val end = System.nanoTime()
 
         chain = chain.addBlock(newBlock)
@@ -93,5 +94,14 @@ object Node {
 
     fun stopListening(listenerId: UUID) {
         listeners -= listenerId
+    }
+
+    fun addBlockIfValid(block: Block) {
+        val hash = Miner.hashBlock(block)
+
+        if(hash.take(difficulty).all { it == '0' } &&
+                Miner.hashBlock(chain.blocks.last()) == block.previousBlockHash) {
+            chain = chain.addBlock(block)
+        }
     }
 }

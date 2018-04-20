@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 object Miner {
-    fun mine(previous: Block, transactions: List<Transaction>): Block {
+    fun mine(previous: Block, transactions: List<Transaction>, difficulty: Int): Block {
         val seedBlock = Block(
                 previous.index,
                 LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
@@ -25,7 +25,7 @@ object Miner {
         val postfix = hash.substring(end, hash.length)
 
         return generateSequence(seedBlock) { it.copy(proof = it.proof + 1) }
-                .dropWhile { !hashStringWithSha256(prefix + it.proof + postfix).startsWith("0000") }
+                .dropWhile { !hashStringWithSha256(prefix + it.proof + postfix).take(difficulty).all { it == '0' } }
                 .first()
 
         // let the object serialize itself

@@ -31,7 +31,8 @@ import kotlinx.coroutines.experimental.channels.sendBlocking
 import java.util.*
 
 fun main(args: Array<String>) {
-    embeddedServer(Netty, 8080, module = Application::main).start()
+    val port = System.getProperty("port", "8080")
+    embeddedServer(Netty, port.toInt(), module = Application::main).start()
 }
 
 fun Application.main() {
@@ -55,7 +56,7 @@ fun Application.main() {
         get("/blocks") {
             call.respond(Node.getChain())
         }
-        get("/mine") {
+        post("/mine") {
             val (newBlock, metric) = Node.mine()
 
             call.respond(MinerResponse(
