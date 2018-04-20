@@ -19,6 +19,10 @@ object Node {
 
     private var transactions = emptyList<Transaction>()
 
+    private var remoteNodes = emptyList<RemoteNode>()
+
+    private var listeners = emptyMap<UUID, (Event) -> Unit>()
+
     fun getStatus(): Status {
         return Status(nodeId, chain.blockHeight)
     }
@@ -37,6 +41,7 @@ object Node {
         val end = System.nanoTime()
 
         chain = chain.addBlock(newBlock)
+        sendEvent(NewBlockEvent(newBlock))
 
         val time = (end - start) / (1000.0 * 1000 * 1000)
         val hashPower = newBlock.proof / time
@@ -45,10 +50,34 @@ object Node {
     }
 
     fun addTransaction(payload: String) {
-        transactions += Transaction(UUID.randomUUID(), Instant.now().epochSecond, payload)
+        val newTransaction = Transaction(UUID.randomUUID(), Instant.now().epochSecond, payload)
+
+        transactions += newTransaction
+
+        sendEvent(NewTransactionEvent(newTransaction))
     }
 
     fun findTransaction(transactionId: UUID): Transaction? {
         return chain.findTransaction(transactionId)
+    }
+
+    fun registerNode(host: String): RemoteNode {
+        val remoteNode = RemoteNode(UUID.randomUUID(), host)
+        remoteNodes += remoteNodes + remoteNode
+        sendEvent(NewNodeEvent(remoteNode))
+
+        return remoteNode
+    }
+
+    private fun sendEvent(event: Event) {
+        listeners.forEach { it.value(event) }
+    }
+
+    fun listen(listenerId: UUID, listener: (Event) -> Unit) {
+        listeners += listeners + Pair(listenerId, listener)
+    }
+
+    fun stopListening(listenerId: UUID) {
+        listeners -= listenerId
     }
 }

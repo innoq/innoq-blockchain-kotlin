@@ -1,8 +1,12 @@
 package com.innoq.chainy
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.innoq.chainy.miner.Node
-import com.innoq.chainy.model.*
+import com.innoq.chainy.model.MinerResponse
+import com.innoq.chainy.model.NodeRegisterRequest
+import com.innoq.chainy.model.NodeRegisterResponse
+import com.innoq.chainy.model.TransactionRequest
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
@@ -19,6 +23,11 @@ import io.ktor.routing.post
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.websocket.Frame
+import io.ktor.websocket.WebSockets
+import io.ktor.websocket.webSocket
+import kotlinx.coroutines.experimental.channels.consumeEach
+import kotlinx.coroutines.experimental.channels.sendBlocking
 import java.util.*
 
 fun main(args: Array<String>) {
@@ -26,9 +35,13 @@ fun main(args: Array<String>) {
 }
 
 fun Application.main() {
+    val writer = jacksonObjectMapper().writer()
+
     install(DefaultHeaders)
     install(Compression)
     install(CallLogging)
+    install(WebSockets)
+
     install(ContentNegotiation) {
         jackson {
             registerModule(JavaTimeModule())
@@ -53,6 +66,8 @@ fun Application.main() {
             val request = call.receive<TransactionRequest>()
 
             Node.addTransaction(request.payload)
+
+            call.respond(HttpStatusCode.NoContent)
         }
         get("/transactions/{id}") {
             try {
@@ -68,6 +83,31 @@ fun Application.main() {
                 )
             }
         }
-        post("/nodes/register")
+        post("/nodes/register") {
+            val request = call.receive<NodeRegisterRequest>()
+            val node = Node.registerNode(request.host)
+            call.respond(NodeRegisterResponse("New node added", node))
+        }
+        webSocket("/events") {
+            val listenerId = UUID.randomUUID()
+
+            Node.listen(listenerId) { event ->
+                try {
+                    outgoing.sendBlocking(Frame.Text(writer.writeValueAsString(event)))
+                } catch (e: Exception) {
+                    Node.stopListening(listenerId)
+                    e.printStackTrace()
+                }
+            }
+
+            try {
+                incoming.consumeEach {
+                    //ignore incoming messages
+                }
+            } finally {
+                Node.stopListening(listenerId)
+            }
+        }
     }
 }
+
